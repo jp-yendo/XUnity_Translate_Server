@@ -13,8 +13,16 @@ def is_dynamic_value(text: str) -> bool:
         True: 動的な値(翻訳をキャッシュすべきでない), False: それ以外
     """
     # FPS表示パターン
-    # 例: "FPS: 60", "FPS:60", "60 FPS", "60FPS"など
-    if re.search(r"FPS\s*[:：]?\s*\d+|^\d+\s*FPS$", text, re.IGNORECASE):
+    # 基本パターン: "FPS: 359", "FPS:359", "FPS 359", "359 FPS", "359FPS"
+    # 小数点対応: "FPS: 59.9", "59.9 FPS", "59.9FPS"
+    # フレームレート表現: "framerate: 60", "60 fps", "Frame Rate: 60"
+    # パターン1: FPS/framerate + 数字
+    # パターン2: 数字 + FPS/framerate
+    if re.search(
+        r"(?:FPS|F\.P\.S\.?|framerate|frame\s*rate)\s*[:：]?\s*\d+(?:\.\d+)?|\d+(?:\.\d+)?\s*(?:FPS|F\.P\.S\.?|framerate|frame\s*rate)",
+        text,
+        re.IGNORECASE,
+    ):
         return True
 
     return False
