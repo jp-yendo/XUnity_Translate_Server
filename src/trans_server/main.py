@@ -2,8 +2,9 @@
 
 import argparse
 import sys
+import traceback
 from typing import Type
-from flask import Flask, request, jsonify
+from flask import Flask, request
 from .providers.base_provider import BaseProvider
 from .providers.openai_provider import OpenAIProvider
 from .providers.openai_compatible_provider import OpenAICompatibleProvider
@@ -11,6 +12,7 @@ from .providers.anthropic_provider import AnthropicProvider
 from .providers.anthropic_compatible_provider import AnthropicCompatibleProvider
 from .providers.ollama_provider import OllamaProvider
 from .providers.gemini_provider import GeminiProvider
+from .utils.language_mapper import LanguageMapper
 
 
 class TranslationServer:
@@ -36,35 +38,42 @@ class TranslationServer:
         GET /translate?from={source_lang}&to={target_lang}&text={text}
         Returns: Plain text translation
         """
+        # Parse query parameters
+        src_lang = request.args.get("from")
+        dst_lang = request.args.get("to")
+        text = request.args.get("text")
+
+        if not text:
+            # Return error status for missing text parameter
+            return "", 400, {"Content-Type": "text/plain; charset=utf-8"}
+
+        # Use fallback languages if not specified
+        if not src_lang:
+            src_lang = self.provider.config.fallback_src_lang if self.provider.config.fallback_src_lang else "ja"
+        if not dst_lang:
+            dst_lang = self.provider.config.fallback_dst_lang if self.provider.config.fallback_dst_lang else "en"
+
+        # Validate language codes
         try:
-            # Parse query parameters
-            src_lang = request.args.get("from")
-            dst_lang = request.args.get("to")
-            text = request.args.get("text")
+            LanguageMapper.validate_language_code(src_lang, "from")
+            LanguageMapper.validate_language_code(dst_lang, "to")
+        except ValueError as e:
+            # Return error status for invalid language codes
+            print(f"Language validation error: {e}", file=sys.stderr)
+            return "", 400, {"Content-Type": "text/plain; charset=utf-8"}
 
-            if not text:
-                return "ERROR: 'text' parameter is required", 400
-
-            # Use fallback languages if not specified
-            if not src_lang:
-                src_lang = self.provider.config.fallback_src_lang if self.provider.config.fallback_src_lang else "ja"
-            if not dst_lang:
-                dst_lang = self.provider.config.fallback_dst_lang if self.provider.config.fallback_dst_lang else "en"
-
+        try:
             # Translate
             translation = self.provider.translate(text, src_lang, dst_lang)
-
             # Return plain text response (CustomTranslate specification)
             return translation, 200, {"Content-Type": "text/plain; charset=utf-8"}
 
-        except ValueError as e:
-            return f"ERROR: {str(e)}", 400, {"Content-Type": "text/plain; charset=utf-8"}
         except Exception as e:
+            # Log error to stderr
             print(f"Translation error: {e}", file=sys.stderr)
-            import traceback
-
             traceback.print_exc()
-            return "ERROR: Internal server error", 500, {"Content-Type": "text/plain; charset=utf-8"}
+            # Return error status without error message to prevent translation from being cached
+            return "", 500, {"Content-Type": "text/plain; charset=utf-8"}
 
     def start(self, host: str, port: int):
         """Start server"""
@@ -80,12 +89,12 @@ class TranslationServer:
 def get_provider_class(provider_name: str) -> Type[BaseProvider]:
     """Get provider class from provider name"""
     provider_map = {
-        "openai": OpenAIProvider,
-        "openai-compatible": OpenAICompatibleProvider,
         "anthropic": AnthropicProvider,
         "anthropic-compatible": AnthropicCompatibleProvider,
-        "ollama": OllamaProvider,
+        "openai": OpenAIProvider,
+        "openai-compatible": OpenAICompatibleProvider,
         "gemini": GeminiProvider,
+        "ollama": OllamaProvider,
     }
 
     provider_class = provider_map.get(provider_name.lower())
@@ -104,8 +113,6 @@ def list_models_and_exit(provider: BaseProvider):
             print(f"  - {model}")
     except Exception as e:
         print(f"Failed to retrieve model list: {e}", file=sys.stderr)
-        import traceback
-
         traceback.print_exc()
         sys.exit(1)
 
@@ -190,8 +197,6 @@ def main():
         print("\nExiting...")
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
-        import traceback
-
         traceback.print_exc()
         sys.exit(1)
 

@@ -134,3 +134,9 @@ class LanguageMapper:
     def is_supported(cls, lang_code: str) -> bool:
         """サポートされている言語コードかチェック"""
         return lang_code in cls.LANGUAGE_MAP
+
+    @classmethod
+    def validate_language_code(cls, lang_code: str, lang_type: str) -> None:
+        """言語コードをバリデーション（サポート外ならValueErrorを発生）"""
+        if not cls.is_supported(lang_code):
+            raise ValueError(f"{lang_type} language code '{lang_code}' is not supported")

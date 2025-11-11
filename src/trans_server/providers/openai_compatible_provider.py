@@ -4,6 +4,7 @@ import argparse
 from dataclasses import dataclass
 from openai import OpenAI
 from ..data_models import ProviderConfig
+from ..mods.prompt_builder import PromptBuilder
 from .openai_provider import OpenAIProvider, OpenAIConfig
 
 
@@ -37,13 +38,7 @@ class OpenAICompatibleProvider(OpenAIProvider):
             base_url=openai_config.api_base,
             organization=openai_config.organization,
         )
-        self.prompt_builder = self._create_prompt_builder()
-
-    def _create_prompt_builder(self):
-        """Create prompt builder instance"""
-        from ..mods.prompt_builder import PromptBuilder
-
-        return PromptBuilder()
+        self.prompt_builder = PromptBuilder()
 
     @staticmethod
     def add_provider_args(parser: argparse.ArgumentParser) -> None:

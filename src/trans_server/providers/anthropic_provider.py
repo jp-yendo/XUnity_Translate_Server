@@ -3,7 +3,7 @@
 import argparse
 from dataclasses import dataclass
 from anthropic import Anthropic
-from anthropic.types import TextBlock
+from anthropic.types import TextBlock, ThinkingBlock
 from ..data_models import ProviderConfig
 from ..mods.prompt_builder import PromptBuilder
 from .base_provider import BaseProvider
@@ -56,13 +56,22 @@ class AnthropicProvider(BaseProvider):
             temperature=0.3,
         )
 
-        # Extract translation
-        first_content = response.content[0]
-        if isinstance(first_content, TextBlock):
-            content = first_content.text
-        else:
-            raise ValueError(f"Invalid response format from Anthropic API: {type(first_content)}")
-        translation = self.prompt_builder.extract_translation(content)
+        # Extract translation from response content
+        # Handle both TextBlock and ThinkingBlock (newer models may include thinking process)
+        content_text = ""
+        for content_block in response.content:
+            if isinstance(content_block, TextBlock):
+                content_text = content_block.text
+                break  # Use the first text block
+            if isinstance(content_block, ThinkingBlock):
+                # Skip thinking blocks, look for actual text response
+                continue
+            raise ValueError(f"Invalid response format from Anthropic API: {type(content_block)}")
+
+        if not content_text:
+            raise ValueError("No text content found in Anthropic API response")
+
+        translation = self.prompt_builder.extract_translation(content_text)
 
         return translation
 

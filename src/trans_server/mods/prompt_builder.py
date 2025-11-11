@@ -1,5 +1,6 @@
 """Prompt builder for AI translation."""
 
+import re
 from typing import Optional
 from ..utils.language_mapper import LanguageMapper
 
@@ -50,8 +51,6 @@ Rules:
     @staticmethod
     def extract_translation(response: str) -> str:
         """AI応答から翻訳結果を抽出"""
-        import re
-
         # <translate>...</translate>のパターンで抽出（改行や空白も含む）
         pattern = r"<translate>(.*?)</translate>"
         match = re.search(pattern, response, re.DOTALL)

@@ -4,6 +4,7 @@ import argparse
 from dataclasses import dataclass
 from anthropic import Anthropic
 from ..data_models import ProviderConfig
+from ..mods.prompt_builder import PromptBuilder
 from .anthropic_provider import AnthropicProvider, AnthropicConfig
 
 
@@ -34,13 +35,7 @@ class AnthropicCompatibleProvider(AnthropicProvider):
             api_key=anthropic_config.api_key if anthropic_config.api_key else "sk-ant-no-key-required",
             base_url=anthropic_config.api_base,
         )
-        self.prompt_builder = self._create_prompt_builder()
-
-    def _create_prompt_builder(self):
-        """Create prompt builder instance"""
-        from ..mods.prompt_builder import PromptBuilder
-
-        return PromptBuilder()
+        self.prompt_builder = PromptBuilder()
 
     @staticmethod
     def add_provider_args(parser: argparse.ArgumentParser) -> None:
