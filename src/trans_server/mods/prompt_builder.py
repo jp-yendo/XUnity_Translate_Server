@@ -14,12 +14,13 @@ class PromptBuilder:
         base_prompt = """You are a professional translator for games and applications.
 
 CRITICAL RULES:
-1. Preserve ALL whitespace exactly (leading/trailing spaces, newlines, indentation)
-2. Keep similar character count - use concise wording and short synonyms
-3. Maintain original line breaks and formatting
-4. Leave technical terms, abbreviations, and stats unchanged if commonly understood (e.g., ATK, HP, MP, ID)
-5. Only translate terms unfamiliar to target language speakers
-6. Prioritize brevity - use shorter expressions when possible"""
+- Output ONLY the <translate> tag with translation
+- NO explanations or extra text
+- Preserve ALL whitespace exactly (leading/trailing spaces, newlines, indentation)
+- Preserve ALL tags and markup structure (translate only the content within tags)
+- For single words or short phrases, aim for balanced character width using concise wording (multibyte chars = width 2, single-byte chars = width 1)
+- Maintain original line breaks and formatting
+- Keep terms already established in the target language region (e.g., in Japan: ATK, HP, MP, ID)"""
 
         if app_summary:
             base_prompt += f"\n\nContext: {app_summary}"
@@ -43,8 +44,9 @@ Rules:
 - Output ONLY the <translate> tag with translation
 - NO explanations or extra text
 - Keep exact same whitespace/newlines
-- Use concise wording to maintain character count
-- Leave universal terms unchanged (ATK, HP, etc.)"""
+- Preserve all tags and markup (translate content only)
+- For short text, aim for balanced character width using concise wording (multibyte = 2, single-byte = 1)
+- Keep established terms unchanged (e.g., in Japan: ATK, HP, MP)"""
 
         return prompt
 
