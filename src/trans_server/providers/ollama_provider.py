@@ -26,8 +26,9 @@ class OllamaProvider(BaseProvider):
 
     def list_models(self) -> list[str]:
         """Get available models"""
-        models = self.client.list()
-        return [model["name"] for model in models["models"]]
+        response = self.client.list()
+        # pylint: disable=no-member
+        return [m.model for m in response.models if m.model]  # type: ignore[attr-defined]
 
     def translate(self, text: str, src_lang: str, dst_lang: str) -> str:
         """Execute translation (1-to-1)"""
