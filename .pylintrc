@@ -3,3 +3,6 @@ extension-pkg-whitelist=
 
 [MESSAGES CONTROL]
 disable=missing-docstring
+
+[FORMAT]
+max-line-length=160
