@@ -90,6 +90,45 @@ pyright *.py
 - **Dev dependency**: `pylint` (code quality only)
 - Keep it lightweight
 
+## Python Environment Management
+
+**CRITICAL: Virtual Environment Rules**
+
+This project uses a pre-existing virtual environment located at `./venv`.
+
+**Strict Rules:**
+1. **ALWAYS use the existing `./venv` virtual environment**
+2. **NEVER create a new virtual environment**
+3. **NEVER use `uv`, `uvx`, or other package managers without explicit permission**
+4. **Use standard `pip` within the venv for package management**
+5. **Activate venv before running commands:**
+   ```powershell
+   # PowerShell
+   .\venv\Scripts\Activate.ps1
+
+   # Command Prompt
+   venv\Scripts\activate.bat
+   ```
+
+**Package Installation:**
+```powershell
+# Activate venv first
+.\venv\Scripts\Activate.ps1
+
+# Then install packages
+pip install package-name
+```
+
+**Running Scripts:**
+```powershell
+# Option 1: Activate venv and run
+.\venv\Scripts\Activate.ps1
+python script.py
+
+# Option 2: Use venv python directly
+.\venv\Scripts\python.exe script.py
+```
+
 ## Project Structure
 - This is a collection of utilities, not a long-running service
 - Each script is independent - no cross-script dependencies
