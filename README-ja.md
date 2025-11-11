@@ -105,28 +105,29 @@ uvx XUnity_Translate_Server --provider ollama --list-models
 
 ## API仕様
 
-### POST /translate
+### GET /translate
 
 CustomTranslate仕様に準拠した翻訳エンドポイント
 
 **リクエスト:**
 
-```json
-{
-  "contentType": "application/json",
-  "untranslatedTexts": ["こんにちは", "世界"],
-  "sourceLanguage": "ja",
-  "destinationLanguage": "en"
-}
+```http
+GET /translate?from=ja&to=en&text=こんにちは
 ```
+
+**パラメータ:**
+
+- `from`: 翻訳元言語コード（例: ja, en）
+- `to`: 翻訳先言語コード（例: en, ja）
+- `text`: 翻訳するテキスト
 
 **レスポンス:**
 
-```json
-{
-  "translatedTexts": ["Hello", "World"]
-}
+```text
+Hello
 ```
+
+プレーンテキスト形式で翻訳結果を返します。
 
 ### GET /health
 
@@ -134,10 +135,8 @@ CustomTranslate仕様に準拠した翻訳エンドポイント
 
 **レスポンス:**
 
-```json
-{
-  "status": "ok"
-}
+```text
+ok
 ```
 
 ## XUnity.AutoTranslatorでの設定

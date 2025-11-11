@@ -23,14 +23,20 @@ class AnthropicProvider(BaseProvider):
         super().__init__(config)
         self.anthropic_config = anthropic_config
 
-        # Initialize client
-        self.client = Anthropic(api_key=anthropic_config.api_key)  # type: ignore[arg-type]
+        # Initialize Anthropic client (official API, no base_url)
+        self.client = Anthropic(api_key=anthropic_config.api_key)
         self.prompt_builder = PromptBuilder()
 
     def list_models(self) -> list[str]:
         """Get available models"""
-        models = self.client.models.list()
-        return [model.id for model in models.data]
+        try:
+            models = self.client.models.list()
+            if models.data is None:
+                return []
+            return [model.id for model in models.data]
+        except Exception:  # pylint: disable=broad-except
+            # Handle potential API errors
+            return []
 
     def translate(self, text: str, src_lang: str, dst_lang: str) -> str:
         """Execute translation (1-to-1)"""

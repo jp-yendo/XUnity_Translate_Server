@@ -105,36 +105,38 @@ uvx XUnity_Translate_Server --provider ollama --list-models
 
 ## API Specification
 
-### POST /translate
+### GET /translate
 
 Translation endpoint compliant with CustomTranslate specification
 
 **Request:**
-```json
-{
-  "contentType": "application/json",
-  "untranslatedTexts": ["こんにちは", "世界"],
-  "sourceLanguage": "ja",
-  "destinationLanguage": "en"
-}
+
+```http
+GET /translate?from=ja&to=en&text=こんにちは
 ```
 
+**Parameters:**
+
+- `from`: Source language code (e.g., ja, en)
+- `to`: Target language code (e.g., en, ja)
+- `text`: Text to translate
+
 **Response:**
-```json
-{
-  "translatedTexts": ["Hello", "World"]
-}
+
+```text
+Hello
 ```
+
+Returns plain text translation.
 
 ### GET /health
 
 Health check endpoint
 
 **Response:**
-```json
-{
-  "status": "ok"
-}
+
+```text
+ok
 ```
 
 ## XUnity.AutoTranslator Configuration

@@ -23,46 +23,48 @@ class TranslationServer:
 
     def _setup_routes(self):
         """Setup routes"""
-        self.app.route("/translate", methods=["POST"])(self.handle_translate)
+        self.app.route("/translate", methods=["GET"])(self.handle_translate)
         self.app.route("/health", methods=["GET"])(self.handle_health)
 
     def handle_health(self):
         """Health check endpoint"""
-        return jsonify({"status": "ok"})
+        return "ok", 200, {"Content-Type": "text/plain; charset=utf-8"}
 
     def handle_translate(self):
-        """Translation endpoint (CustomTranslate specification)"""
+        """Translation endpoint (CustomTranslate specification)
+
+        GET /translate?from={source_lang}&to={target_lang}&text={text}
+        Returns: Plain text translation
+        """
         try:
-            # Parse request
-            data = request.get_json()
+            # Parse query parameters
+            src_lang = request.args.get("from")
+            dst_lang = request.args.get("to")
+            text = request.args.get("text")
 
-            # CustomTranslate request format (batch processing)
-            # { "contentType": "application/json", "untranslatedTexts": [...], "sourceLanguage": "ja", "destinationLanguage": "en" }
-            untranslated_texts = data.get("untranslatedTexts", [])
-            src_lang = data.get("sourceLanguage")
-            dst_lang = data.get("destinationLanguage")
+            if not text:
+                return "ERROR: 'text' parameter is required", 400
 
-            if not untranslated_texts:
-                return jsonify({"error": "untranslatedTexts is required"}), 400
+            # Use fallback languages if not specified
+            if not src_lang:
+                src_lang = self.provider.config.fallback_src_lang if self.provider.config.fallback_src_lang else "ja"
+            if not dst_lang:
+                dst_lang = self.provider.config.fallback_dst_lang if self.provider.config.fallback_dst_lang else "en"
 
-            # Translate each text individually (1-to-1)
-            translations = []
-            for text in untranslated_texts:
-                translation = self.provider.translate(text, src_lang, dst_lang)
-                translations.append(translation)
+            # Translate
+            translation = self.provider.translate(text, src_lang, dst_lang)
 
-            # CustomTranslate response format
-            # { "translatedTexts": [...] }
-            return jsonify({"translatedTexts": translations})
+            # Return plain text response (CustomTranslate specification)
+            return translation, 200, {"Content-Type": "text/plain; charset=utf-8"}
 
         except ValueError as e:
-            return jsonify({"error": str(e)}), 400
+            return f"ERROR: {str(e)}", 400, {"Content-Type": "text/plain; charset=utf-8"}
         except Exception as e:
             print(f"Translation error: {e}", file=sys.stderr)
             import traceback
 
             traceback.print_exc()
-            return jsonify({"error": "Internal server error"}), 500
+            return "ERROR: Internal server error", 500, {"Content-Type": "text/plain; charset=utf-8"}
 
     def start(self, host: str, port: int):
         """Start server"""

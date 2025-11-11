@@ -2,7 +2,6 @@
 
 import argparse
 from dataclasses import dataclass
-from typing import Optional
 from openai import OpenAI
 from ..data_models import ProviderConfig
 from ..mods.prompt_builder import PromptBuilder
@@ -14,7 +13,7 @@ class OpenAIConfig:
     """OpenAI-specific configuration"""
 
     api_key: str
-    organization: Optional[str] = None
+    organization: str | None = None
 
 
 class OpenAIProvider(BaseProvider):
@@ -24,18 +23,23 @@ class OpenAIProvider(BaseProvider):
         super().__init__(config)
         self.openai_config = openai_config
 
-        # Initialize client
-        client_kwargs = {"api_key": openai_config.api_key}
+        # Initialize OpenAI client (official API, no base_url)
+        client_args = {"api_key": openai_config.api_key}
         if openai_config.organization:
-            client_kwargs["organization"] = openai_config.organization
-
-        self.client = OpenAI(**client_kwargs)  # type: ignore[arg-type]
+            client_args["organization"] = openai_config.organization
+        self.client = OpenAI(**client_args)  # type: ignore[arg-type]
         self.prompt_builder = PromptBuilder()
 
     def list_models(self) -> list[str]:
         """Get available models"""
-        models = self.client.models.list()
-        return [model.id for model in models.data]
+        try:
+            models = self.client.models.list()
+            if models.data is None:
+                return []
+            return [model.id for model in models.data]
+        except Exception:  # pylint: disable=broad-except
+            # Handle potential API errors
+            return []
 
     def translate(self, text: str, src_lang: str, dst_lang: str) -> str:
         """Execute translation (1-to-1)"""
