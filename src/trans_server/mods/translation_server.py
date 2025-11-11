@@ -1,6 +1,7 @@
 """Translation server implementation."""
 
 import sys
+import time
 import traceback
 from flask import Flask, request
 from ..providers.base_provider import BaseProvider
@@ -67,7 +68,24 @@ class TranslationServer:
 
         try:
             # Translate
+            # プロバイダー名を取得(表示用)
+            provider_name = self.provider.config.provider
+
+            # 送信開始を表示(改行なし)
+            print(f"[{provider_name}] Sending...", end="", flush=True)
+
+            # 時間計測開始
+            start_time = time.time()
+
+            # 翻訳実行
             translation = self.provider.translate(text, src_lang, dst_lang)
+
+            # 経過時間を計算
+            elapsed_time = time.time() - start_time
+
+            # 完了を表示(同じ行に追加)
+            print(f" done ({elapsed_time:.2f}sec)")
+
             # Return plain text response (CustomTranslate specification)
             return translation, 200, {"Content-Type": "text/plain; charset=utf-8"}
 
