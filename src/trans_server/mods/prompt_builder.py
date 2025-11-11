@@ -23,7 +23,7 @@ CRITICAL RULES:
 - Keep terms already established in the target language region (e.g., in Japan: ATK, HP, MP, ID)"""
 
         if app_summary:
-            base_prompt += f"\n\nContext: {app_summary}"
+            base_prompt += f"\n\n<app_context>\nBackground information about the application (NOT for translation - use this to understand the domain and terminology):\n{app_summary}\n</app_context>"
 
         return base_prompt
 
